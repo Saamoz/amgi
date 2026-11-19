@@ -37,6 +37,7 @@ public struct RootView: View {
 
     @State private var pendingReviewDeckId: DeckID?
     @State private var showImport = false
+    @State private var openedPackage: URL?
     @State private var refreshID = UUID()
     @State private var wordSheet: WordSpotlightSheet?
     private let wordSpotlight = WordSpotlightController.shared
@@ -91,6 +92,10 @@ public struct RootView: View {
                 }
             }
             .onOpenURL { url in
+                if url.isFileURL, ["apkg", "colpkg"].contains(url.pathExtension.lowercased()) {
+                    openedPackage = url
+                    return
+                }
                 if let link = WordSpotlightLink(url: url) {
                     wordSheet = .word(link)
                     return
@@ -174,7 +179,7 @@ public struct RootView: View {
             Task { await RwkvEngine.shared.prepare() }
         }
         .overlay(alignment: .top) { RwkvProgressBanner() }
-        .deckImport(isPresented: $showImport) {
+        .deckImport(isPresented: $showImport, openedFile: $openedPackage) {
             store.invalidateAll()
             refreshID = UUID()
         }

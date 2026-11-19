@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 
 private struct DeckImportModifier: ViewModifier {
     @Binding var isPresented: Bool
+    @Binding var openedFile: URL?
     let onRefresh: () -> Void
 
     @State private var status: ImportStatusBanner.Status?
@@ -20,6 +21,11 @@ private struct DeckImportModifier: ViewModifier {
         content
             .fileImporter(isPresented: $isPresented, allowedContentTypes: [.data]) { result in
                 handleImport(result)
+            }
+            .onChange(of: openedFile, initial: true) { _, url in
+                guard let url else { return }
+                openedFile = nil
+                handleImport(.success(url))
             }
             .overlay(alignment: .top) { ImportStatusBanner(status: status) }
             .animation(AmgiMotion.momentum, value: status)
@@ -66,6 +72,16 @@ private extension DeckImportModifier {
 
 extension View {
     public func deckImport(isPresented: Binding<Bool>, onRefresh: @escaping () -> Void) -> some View {
-        modifier(DeckImportModifier(isPresented: isPresented, onRefresh: onRefresh))
+        modifier(DeckImportModifier(isPresented: isPresented, openedFile: .constant(nil), onRefresh: onRefresh))
+    }
+
+    /// Also imports `openedFile` when it is set: an .apkg or .colpkg opened
+    /// in Amgi from Files or the share sheet.
+    public func deckImport(
+        isPresented: Binding<Bool>,
+        openedFile: Binding<URL?>,
+        onRefresh: @escaping () -> Void
+    ) -> some View {
+        modifier(DeckImportModifier(isPresented: isPresented, openedFile: openedFile, onRefresh: onRefresh))
     }
 }

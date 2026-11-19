@@ -25,10 +25,13 @@ enum ImportError: Error, LocalizedError {
 
 public enum ImportHelper {
     public static func importPackage(from url: URL) async throws -> String {
-        guard url.startAccessingSecurityScopedResource() else {
+        // Picked files are security-scoped; files opened in Amgi from Files
+        // or the share sheet arrive as plain copies in the app's inbox.
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        guard FileManager.default.isReadableFile(atPath: url.path) else {
             throw ImportError.accessDenied
         }
-        defer { url.stopAccessingSecurityScopedResource() }
 
         let tempDir = FileManager.default.temporaryDirectory
         let tempFile = tempDir.appendingPathComponent(url.lastPathComponent)
