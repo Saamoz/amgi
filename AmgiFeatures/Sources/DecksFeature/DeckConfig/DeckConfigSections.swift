@@ -8,12 +8,50 @@
 import SwiftUI
 import Theme
 import AnkiKit
+import AppShared
 
 // Section structs for the deck-options Form. Each is dedicated so SwiftUI can
 // skip its body when its inputs don't change — e.g. tapping a Stepper in
 // Daily Limits doesn't force the FSRS Weights TextField to re-evaluate.
 // Bindings are scoped to exactly the @State each section reads/writes;
 // everything else is `let`.
+
+/// Which algorithm schedules this preset's reviews.
+struct SchedulerSection: View {
+    @Binding var reviewScheduler: ReviewScheduler
+    private let engine = RwkvEngine.shared
+
+    var body: some View {
+        Section {
+            Picker("Scheduler", selection: $reviewScheduler) {
+                Text("FSRS").tag(ReviewScheduler.fsrs)
+                Text("RWKV-Curve").tag(ReviewScheduler.rwkvCurve)
+                Text("RWKV-Instant").tag(ReviewScheduler.rwkvInstant)
+            }
+            .pickerStyle(.segmented)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets())
+        } header: {
+            Text("Scheduler")
+        } footer: {
+            Text(footer)
+        }
+    }
+
+    private var footer: String {
+        if reviewScheduler != .fsrs, !engine.hasCurveModel {
+            return "Download RWKV in Settings › RWKV Scheduler. Until then this preset reviews with FSRS."
+        }
+        switch reviewScheduler {
+        case .fsrs:
+            return "FSRS models each card on its own from its review history."
+        case .rwkvCurve:
+            return "RWKV learns from every review in your collection and sets each interval where recall falls to your desired retention."
+        case .rwkvInstant:
+            return "RWKV shows the cards you are most likely to forget right now, whatever their due date. Due dates for other devices come from RWKV-Curve."
+        }
+    }
+}
 
 struct PresetSection: View {
     let presetOptions: [DeckConfigsForUpdate.ConfigWithExtra]

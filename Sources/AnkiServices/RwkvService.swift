@@ -26,6 +26,9 @@ public struct RwkvService: Sendable {
     public var checkpoint: @Sendable () throws -> RwkvStatus
     public var cardPrediction: @Sendable (_ cardId: CardID) throws -> RwkvCardPrediction
     public var calibration: @Sendable (_ buckets: Int) throws -> RwkvCalibration
+    /// Puts every preset on `scheduler` and turns FSRS on collection-wide,
+    /// which RWKV-Curve's answer states build on. Other settings are kept.
+    public var useSchedulerForAllPresets: @Sendable (_ scheduler: ReviewScheduler) throws -> Void
 }
 
 extension RwkvService: DependencyKey {
@@ -39,7 +42,33 @@ extension RwkvService: DependencyKey {
             progress: { try backend.invoke(.rwkvProgress) },
             checkpoint: { try backend.invoke(.rwkvCheckpoint) },
             cardPrediction: { cardId in try backend.invoke(.rwkvCardPrediction(cardId: cardId)) },
-            calibration: { buckets in try backend.invoke(.rwkvCalibration(buckets: buckets)) }
+            calibration: { buckets in try backend.invoke(.rwkvCalibration(buckets: buckets)) },
+            useSchedulerForAllPresets: { scheduler in
+                let deckId = try backend.invoke(.getCurrentDeck).id
+                let context = try backend.invoke(.deckConfigsForUpdate(deckId: deckId))
+                // The engine assigns the target deck the last preset sent, so
+                // its own preset goes last to keep the assignment unchanged.
+                let own = context.currentDeck?.configID
+                let configs = context.allConfig
+                    .map { entry in
+                        var config = entry.config
+                        config.config.reviewScheduler = scheduler
+                        return config
+                    }
+                    .sorted { ($0.id == own ? 1 : 0) < ($1.id == own ? 1 : 0) }
+                guard !configs.isEmpty else { return }
+                try backend.invoke(.updateDeckConfigs(UpdateDeckConfigsRequest(
+                    targetDeckID: deckId,
+                    configs: configs,
+                    cardStateCustomizer: context.cardStateCustomizer,
+                    limits: context.currentDeck?.limits,
+                    newCardsIgnoreReviewLimit: context.newCardsIgnoreReviewLimit,
+                    fsrs: scheduler == .fsrs ? context.fsrs : true,
+                    applyAllParentLimits: context.applyAllParentLimits,
+                    fsrsHealthCheck: context.fsrsHealthCheck,
+                    switches: context.switches
+                )))
+            }
         )
     }()
 }

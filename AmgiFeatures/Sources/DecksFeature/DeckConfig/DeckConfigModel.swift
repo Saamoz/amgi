@@ -48,6 +48,13 @@ final class DeckConfigModel {
     var leechAction: LeechAction = .suspend
 
     var fsrsEnabled = false
+    /// RWKV schedulers build on FSRS's answer states, so choosing one also
+    /// turns FSRS on for the collection.
+    var reviewScheduler: ReviewScheduler = .fsrs {
+        didSet {
+            if reviewScheduler != .fsrs { fsrsEnabled = true }
+        }
+    }
     var desiredRetentionPercent: Double = 90
     var historicalRetentionPercent: Double = 90
     var fsrsHealthCheck = false
@@ -190,6 +197,9 @@ final class DeckConfigModel {
         applyAllParentLimits = context.applyAllParentLimits
         fsrsHealthCheck = context.fsrsHealthCheck
         fsrsEnabled = context.fsrs
+        reviewScheduler = cfg.reviewScheduler
+        // `reviewScheduler`'s didSet must not override the saved FSRS state.
+        fsrsEnabled = context.fsrs
 
         if let override = context.currentDeck?.limits?.desiredRetention {
             desiredRetentionPercent = Double(override * 100)
@@ -258,6 +268,7 @@ final class DeckConfigModel {
         cfg.leechThreshold = Int(max(1, leechThreshold))
         cfg.leechAction = leechAction
         cfg.desiredRetention = Float(desiredRetentionPercent / 100)
+        cfg.reviewScheduler = reviewScheduler
         cfg.historicalRetention = Float(historicalRetentionPercent / 100)
         cfg.paramSearch = fsrsParamSearch.trimmingCharacters(in: .whitespacesAndNewlines)
 

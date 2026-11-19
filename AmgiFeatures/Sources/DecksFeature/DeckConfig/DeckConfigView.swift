@@ -8,6 +8,7 @@
 import SwiftUI
 import Theme
 import AnkiKit
+import AppShared
 import AnkiClients
 import Dependencies
 
@@ -64,7 +65,15 @@ struct DeckConfigView: View {
             Button("Cancel") { attemptDismiss() }
         }
         ToolbarItem(placement: .confirmationAction) {
-            Button("Save") { Task { if await model.saveConfig() { onDismiss() } } }
+            Button("Save") {
+                Task {
+                    if await model.saveConfig() {
+                        // Load or unload RWKV for the presets now in use.
+                        await RwkvEngine.shared.prepare()
+                        onDismiss()
+                    }
+                }
+            }
                 .disabled(!model.hasLoadedConfig || model.isSaving)
         }
     }
@@ -106,6 +115,7 @@ struct DeckConfigView: View {
             },
             onDelete: { model.destination = .alert(.deletePresetConfirm) }
         )
+        SchedulerSection(reviewScheduler: $model.reviewScheduler)
         DailyLimitsSection(
             newCardsPerDay: $model.newCardsPerDay,
             reviewsPerDay: $model.reviewsPerDay,
