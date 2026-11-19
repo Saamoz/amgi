@@ -30,6 +30,8 @@ public nonisolated struct Anki_Github_LatestReleaseRequest: Sendable {
 
   public var includePrerelease: Bool = false
 
+  public var portable: Bool = false
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -48,6 +50,24 @@ public nonisolated struct Anki_Github_GithubRelease: Sendable {
 
   public var checksum: String = String()
 
+  public var targetCommitish: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public nonisolated struct Anki_Github_ExtractPortableUpdateRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var archivePath: String = String()
+
+  /// Must not already exist; never extract into the running application's
+  /// folder.
+  public var destination: String = String()
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
@@ -59,7 +79,7 @@ fileprivate nonisolated let _protobuf_package = "anki.github"
 
 nonisolated extension Anki_Github_LatestReleaseRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".LatestReleaseRequest"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}include_prerelease\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}include_prerelease\0\u{1}portable\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -68,6 +88,7 @@ nonisolated extension Anki_Github_LatestReleaseRequest: SwiftProtobuf.Message, S
       // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularBoolField(value: &self.includePrerelease) }()
+      case 2: try { try decoder.decodeSingularBoolField(value: &self.portable) }()
       default: break
       }
     }
@@ -77,11 +98,15 @@ nonisolated extension Anki_Github_LatestReleaseRequest: SwiftProtobuf.Message, S
     if self.includePrerelease != false {
       try visitor.visitSingularBoolField(value: self.includePrerelease, fieldNumber: 1)
     }
+    if self.portable != false {
+      try visitor.visitSingularBoolField(value: self.portable, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Anki_Github_LatestReleaseRequest, rhs: Anki_Github_LatestReleaseRequest) -> Bool {
     if lhs.includePrerelease != rhs.includePrerelease {return false}
+    if lhs.portable != rhs.portable {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -89,7 +114,7 @@ nonisolated extension Anki_Github_LatestReleaseRequest: SwiftProtobuf.Message, S
 
 nonisolated extension Anki_Github_GithubRelease: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".GithubRelease"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}tag_name\0\u{1}filename\0\u{1}url\0\u{1}checksum\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}tag_name\0\u{1}filename\0\u{1}url\0\u{1}checksum\0\u{3}target_commitish\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -101,6 +126,7 @@ nonisolated extension Anki_Github_GithubRelease: SwiftProtobuf.Message, SwiftPro
       case 2: try { try decoder.decodeSingularStringField(value: &self.filename) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self.url) }()
       case 4: try { try decoder.decodeSingularStringField(value: &self.checksum) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.targetCommitish) }()
       default: break
       }
     }
@@ -119,6 +145,9 @@ nonisolated extension Anki_Github_GithubRelease: SwiftProtobuf.Message, SwiftPro
     if !self.checksum.isEmpty {
       try visitor.visitSingularStringField(value: self.checksum, fieldNumber: 4)
     }
+    if !self.targetCommitish.isEmpty {
+      try visitor.visitSingularStringField(value: self.targetCommitish, fieldNumber: 5)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -127,6 +156,42 @@ nonisolated extension Anki_Github_GithubRelease: SwiftProtobuf.Message, SwiftPro
     if lhs.filename != rhs.filename {return false}
     if lhs.url != rhs.url {return false}
     if lhs.checksum != rhs.checksum {return false}
+    if lhs.targetCommitish != rhs.targetCommitish {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension Anki_Github_ExtractPortableUpdateRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".ExtractPortableUpdateRequest"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}archive_path\0\u{1}destination\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularStringField(value: &self.archivePath) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.destination) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.archivePath.isEmpty {
+      try visitor.visitSingularStringField(value: self.archivePath, fieldNumber: 1)
+    }
+    if !self.destination.isEmpty {
+      try visitor.visitSingularStringField(value: self.destination, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Anki_Github_ExtractPortableUpdateRequest, rhs: Anki_Github_ExtractPortableUpdateRequest) -> Bool {
+    if lhs.archivePath != rhs.archivePath {return false}
+    if lhs.destination != rhs.destination {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

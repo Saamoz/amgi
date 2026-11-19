@@ -26,6 +26,10 @@ public enum NewCardGatherPriority: Int, Sendable, Hashable, Codable, CaseIterabl
     case randomNotes = 3
     case randomCards = 4
     case deckThenRandomNotes = 5
+    /// RWKV: most likely recalled first.
+    case descendingRetrievability = 6
+    /// RWKV: least likely recalled first.
+    case ascendingRetrievability = 7
 }
 
 public enum NewCardSortOrder: Int, Sendable, Hashable, Codable, CaseIterable {

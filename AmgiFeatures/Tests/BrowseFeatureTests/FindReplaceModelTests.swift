@@ -82,7 +82,7 @@ struct FindReplaceModelTests {
         #expect(model.canUndo)
     }
 
-    @Test func replacementDollarsAreLiteralUnlessRegex() async {
+    @Test func replacementIsPassedThroughForTheEngineToEscape() async {
         let calls = Calls()
         let model = makeModel(ids: [], calls: calls)
         model.find = "price"
@@ -90,7 +90,7 @@ struct FindReplaceModelTests {
         await model.apply()
         model.useRegex = true
         await model.apply()
-        #expect(calls.args.map(\.replacement) == ["$$5 $${1}", "$5 ${1}"])
+        #expect(calls.args.map(\.replacement) == ["$5 ${1}", "$5 ${1}"])
     }
 
     @Test func sameInputsCannotBeAppliedTwiceUntilChangedOrUndone() async {

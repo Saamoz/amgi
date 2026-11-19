@@ -7,6 +7,8 @@
 
 package import AnkiKit
 package import AnkiProto
+package import Foundation
+import SwiftProtobuf
 
 // MARK: - DeckConfig.Config <-> Anki_DeckConfig_DeckConfig.Config
 
@@ -56,12 +58,18 @@ package extension DeckConfig.Config {
             easyDaysPercentages: proto.easyDaysPercentages,
             historicalRetention: proto.historicalRetention,
             paramSearch: proto.paramSearch,
-            other: proto.other
+            other: proto.other,
+            rwkvCurveEnabled: proto.rwkvReviewEnabled,
+            rwkvInstantEnabled: proto.rwkvReviewInstantOrderEnabled,
+            preservedProto: (try? proto.serializedData()) ?? Data()
         )
     }
 
     func toProto() -> Anki_DeckConfig_DeckConfig.Config {
-        var proto = Anki_DeckConfig_DeckConfig.Config()
+        // Start from the config this mirror was read from, so a save keeps
+        // every field the mirror does not carry.
+        var proto = (try? Anki_DeckConfig_DeckConfig.Config(serializedBytes: preservedProto))
+            ?? Anki_DeckConfig_DeckConfig.Config()
         proto.learnSteps = learnSteps
         proto.relearnSteps = relearnSteps
         proto.fsrsParams4 = fsrsParams4
@@ -106,6 +114,8 @@ package extension DeckConfig.Config {
         proto.historicalRetention = historicalRetention
         proto.paramSearch = paramSearch
         proto.other = other
+        proto.rwkvReviewEnabled = rwkvCurveEnabled
+        proto.rwkvReviewInstantOrderEnabled = rwkvInstantEnabled
         return proto
     }
 }
@@ -219,7 +229,12 @@ package extension DeckConfigsForUpdate {
             fsrsHealthCheck: proto.fsrsHealthCheck,
             fsrsLegacyEvaluate: proto.fsrsLegacyEvaluate,
             applyAllParentLimits: proto.applyAllParentLimits,
-            daysSinceLastFsrsOptimize: Int(proto.daysSinceLastFsrsOptimize)
+            daysSinceLastFsrsOptimize: Int(proto.daysSinceLastFsrsOptimize),
+            switches: CollectionSchedulingSwitches(
+                loadBalancerEnabled: proto.loadBalancerEnabled,
+                fsrsShortTermWithStepsEnabled: proto.fsrsShortTermWithStepsEnabled,
+                fsrsLearningQueuesDisabled: proto.fsrsLearningQueuesDisabled
+            )
         )
     }
 }
@@ -244,6 +259,9 @@ package extension UpdateDeckConfigsRequest {
         proto.applyAllParentLimits = applyAllParentLimits
         proto.fsrsReschedule = fsrsReschedule
         proto.fsrsHealthCheck = fsrsHealthCheck
+        proto.loadBalancerEnabled = switches.loadBalancerEnabled
+        proto.fsrsShortTermWithStepsEnabled = switches.fsrsShortTermWithStepsEnabled
+        proto.fsrsLearningQueuesDisabled = switches.fsrsLearningQueuesDisabled
         return proto
     }
 }

@@ -100,11 +100,12 @@ import AnkiKit
         }
     }
 
-    @Test func findAndReplace_literalDollarReplacementWithEscape() throws {
+    // The engine keeps `$` literal in a non-regex replacement.
+    @Test func findAndReplace_literalDollarReplacement() throws {
         try withScratchCollection("notes-find-replace-dollar") { backend, _ in
             let id = try addBasicNote(backend, front: "price", back: "x")
             _ = try backend.invoke(.findAndReplace(
-                noteIds: [id], search: "price", replacement: "$$5",
+                noteIds: [id], search: "price", replacement: "$5",
                 regex: false, matchCase: false, fieldName: "Front"
             ))
             #expect(try backend.invoke(.getNote(id: id)).flds == "$5\(Self.separator)x")

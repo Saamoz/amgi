@@ -129,7 +129,8 @@ extension DecksService: DependencyKey {
                     newCardsIgnoreReviewLimit: newCardsIgnoreReviewLimit,
                     fsrs: fsrsEnabled,
                     applyAllParentLimits: applyAllParentLimits,
-                    fsrsHealthCheck: fsrsHealthCheck
+                    fsrsHealthCheck: fsrsHealthCheck,
+                    switches: context.switches
                 )
                 try backend.invoke(.updateDeckConfigs(request))
             },
@@ -222,7 +223,8 @@ private func makeUpdateRequest(
         newCardsIgnoreReviewLimit: context.newCardsIgnoreReviewLimit,
         fsrs: fsrs,
         applyAllParentLimits: context.applyAllParentLimits,
-        fsrsHealthCheck: context.fsrsHealthCheck
+        fsrsHealthCheck: context.fsrsHealthCheck,
+        switches: context.switches
     )
 }
 

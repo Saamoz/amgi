@@ -5,6 +5,26 @@
 //  Created by Vladimir Gusev on 08.05.2026.
 //
 
+/// Collection-wide scheduling switches that every `UpdateDeckConfigs`
+/// request sets. The app does not edit them, but must send back their
+/// current values: the engine applies whatever the request carries, so
+/// leaving them out would switch the load balancer off on every save.
+public struct CollectionSchedulingSwitches: Sendable, Hashable {
+    public var loadBalancerEnabled: Bool
+    public var fsrsShortTermWithStepsEnabled: Bool
+    public var fsrsLearningQueuesDisabled: Bool
+
+    public init(
+        loadBalancerEnabled: Bool = false,
+        fsrsShortTermWithStepsEnabled: Bool = false,
+        fsrsLearningQueuesDisabled: Bool = false
+    ) {
+        self.loadBalancerEnabled = loadBalancerEnabled
+        self.fsrsShortTermWithStepsEnabled = fsrsShortTermWithStepsEnabled
+        self.fsrsLearningQueuesDisabled = fsrsLearningQueuesDisabled
+    }
+}
+
 /// Mirror for `Anki_DeckConfig_DeckConfigsForUpdate`. Carries the
 /// preset list, the current deck's metadata, the defaults, and the
 /// per-collection FSRS toggles that DeckConfigView surfaces.
@@ -20,6 +40,7 @@ public struct DeckConfigsForUpdate: Sendable, Hashable {
     public var fsrsLegacyEvaluate: Bool
     public var applyAllParentLimits: Bool
     public var daysSinceLastFsrsOptimize: Int
+    public var switches: CollectionSchedulingSwitches
 
     public init(
         allConfig: [ConfigWithExtra] = [],
@@ -32,7 +53,8 @@ public struct DeckConfigsForUpdate: Sendable, Hashable {
         fsrsHealthCheck: Bool = false,
         fsrsLegacyEvaluate: Bool = false,
         applyAllParentLimits: Bool = false,
-        daysSinceLastFsrsOptimize: Int = 0
+        daysSinceLastFsrsOptimize: Int = 0,
+        switches: CollectionSchedulingSwitches = CollectionSchedulingSwitches()
     ) {
         self.allConfig = allConfig
         self.currentDeck = currentDeck
@@ -45,6 +67,7 @@ public struct DeckConfigsForUpdate: Sendable, Hashable {
         self.fsrsLegacyEvaluate = fsrsLegacyEvaluate
         self.applyAllParentLimits = applyAllParentLimits
         self.daysSinceLastFsrsOptimize = daysSinceLastFsrsOptimize
+        self.switches = switches
     }
 
     public struct ConfigWithExtra: Sendable, Hashable {
@@ -124,6 +147,7 @@ public struct UpdateDeckConfigsRequest: Sendable, Hashable {
     public var applyAllParentLimits: Bool
     public var fsrsReschedule: Bool
     public var fsrsHealthCheck: Bool
+    public var switches: CollectionSchedulingSwitches
 
     public init(
         targetDeckID: DeckID,
@@ -136,7 +160,8 @@ public struct UpdateDeckConfigsRequest: Sendable, Hashable {
         fsrs: Bool = false,
         applyAllParentLimits: Bool = false,
         fsrsReschedule: Bool = false,
-        fsrsHealthCheck: Bool = false
+        fsrsHealthCheck: Bool = false,
+        switches: CollectionSchedulingSwitches = CollectionSchedulingSwitches()
     ) {
         self.targetDeckID = targetDeckID
         self.configs = configs
@@ -149,5 +174,6 @@ public struct UpdateDeckConfigsRequest: Sendable, Hashable {
         self.applyAllParentLimits = applyAllParentLimits
         self.fsrsReschedule = fsrsReschedule
         self.fsrsHealthCheck = fsrsHealthCheck
+        self.switches = switches
     }
 }

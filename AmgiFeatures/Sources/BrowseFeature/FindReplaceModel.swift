@@ -40,9 +40,10 @@ final class FindReplaceModel {
         self.noteIDs = noteIDs
     }
 
-    // The engine expands $1 / ${name} in the replacement even when regex is off.
+    // The engine keeps `$` literal when regex is off (it escapes it itself
+    // since 26.09); escaping here too would double every dollar sign.
     private var literalSafeReplacement: String {
-        useRegex ? replacement : replacement.replacing("$", with: "$$")
+        replacement
     }
 
     private struct Inputs: Equatable {
