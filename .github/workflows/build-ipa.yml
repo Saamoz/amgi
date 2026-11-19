@@ -46,7 +46,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
         with:
-          toolchain: "1.95"
+          toolchain: "1.97.1"
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
       - name: Install Rust nightly with rust-src
@@ -60,9 +60,9 @@ jobs:
             ~/.cargo/git
             anki-bridge-rs/target
             anki-upstream/out
-          key: ${{ runner.os }}-rust-1.95-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-rust-1.97.1-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-rust-1.95-
+            ${{ runner.os }}-rust-1.97.1-
 
       - name: Install Homebrew dependencies
         run: |
