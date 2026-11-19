@@ -97,6 +97,10 @@ import SwiftProtobuf
             for index in 0..<4 { try addCard(backend, "card \(index)") }
             for _ in 0..<6 { _ = try answerGood(backend) }
 
+            // The app decides whether to load from this, before loading.
+            let unloaded = try backend.invoke(.rwkvStatus)
+            #expect(!unloaded.loaded && unloaded.curvePresets == 1 && unloaded.inUse)
+
             let state = dir.appendingPathComponent("rwkv-state")
             var status = try backend.invoke(.rwkvLoad(RwkvLoadConfig(
                 curveModelPath: weights.path,

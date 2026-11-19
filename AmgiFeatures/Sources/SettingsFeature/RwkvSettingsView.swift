@@ -20,6 +20,7 @@ struct RwkvSettingsView: View {
     @State private var importing = false
     @State private var calibration: RwkvCalibration?
     @State private var confirmRebuild = false
+    @State private var applying: ReviewScheduler?
 
     var body: some View {
         SettingsPage {
@@ -150,36 +151,37 @@ struct RwkvSettingsView: View {
                 SettingsButtonRow(
                     title: "RWKV-Curve for all presets",
                     systemImage: "chart.line.downtrend.xyaxis",
-                    tone: .review
+                    tone: .review,
+                    isBusy: applying == .rwkvCurve
                 ) {
-                    Task { await engine.useForAllPresets(.rwkvCurve) }
+                    Task { await apply(.rwkvCurve) }
                 }
                 SettingsSeparator()
                 SettingsButtonRow(
                     title: "RWKV-Instant for all presets",
                     systemImage: "bolt",
-                    tone: .learning
+                    tone: .learning,
+                    isBusy: applying == .rwkvInstant
                 ) {
-                    Task { await engine.useForAllPresets(.rwkvInstant) }
+                    Task { await apply(.rwkvInstant) }
                 }
                 SettingsSeparator()
                 SettingsButtonRow(
                     title: "FSRS for all presets",
                     systemImage: "function",
-                    tone: .neutral
+                    tone: .neutral,
+                    isBusy: applying == .fsrs
                 ) {
-                    Task { await engine.useForAllPresets(.fsrs) }
+                    Task { await apply(.fsrs) }
                 }
-                if engine.status.loaded {
-                    SettingsSeparator()
-                    SettingsValueRow(
-                        title: "Presets using RWKV",
-                        // Instant presets also use RWKV-Curve for due dates.
-                        value: "\(max(engine.status.curvePresets, engine.status.instantPresets))",
-                        systemImage: "slider.horizontal.3",
-                        tone: .info
-                    )
-                }
+                SettingsSeparator()
+                SettingsValueRow(
+                    title: "Presets using RWKV",
+                    // Instant presets also use RWKV-Curve for due dates.
+                    value: "\(max(engine.status.curvePresets, engine.status.instantPresets))",
+                    systemImage: "slider.horizontal.3",
+                    tone: .info
+                )
             }
             SettingsFootnote(
                 "RWKV-Curve predicts each card's forgetting curve and sets the next review where recall falls to your desired retention. RWKV-Instant instead shows the cards you are most likely to forget right now. Each deck's preset can also be changed in its options. Settings sync to your other devices."
@@ -227,6 +229,12 @@ struct RwkvSettingsView: View {
                 "Each dot groups reviews by the recall RWKV predicted just before you answered. Dots near the diagonal mean the predictions match how often you actually remembered."
             )
         }
+    }
+
+    private func apply(_ scheduler: ReviewScheduler) async {
+        applying = scheduler
+        await engine.useForAllPresets(scheduler)
+        applying = nil
     }
 
     private func metric(_ title: String, _ value: String) -> some View {
