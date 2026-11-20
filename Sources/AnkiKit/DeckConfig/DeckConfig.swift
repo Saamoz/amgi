@@ -97,6 +97,19 @@ public struct DeckConfig: Sendable, Hashable, Identifiable {
         /// through unchanged.
         public var other: Data
 
+        // MARK: RWKV
+        /// RWKV-Curve writes intervals and due dates
+        /// (`rwkv_review_enabled`).
+        public var rwkvCurveEnabled: Bool
+        /// RWKV-Instant picks reviews by predicted recall
+        /// (`rwkv_review_instant_order_enabled`).
+        public var rwkvInstantEnabled: Bool
+
+        /// The engine config this mirror was decoded from. Saving starts
+        /// from it, so fields the app does not mirror (FSRS-7 parameters,
+        /// RWKV tuning, newer upstream options) survive an edit here.
+        public var preservedProto: Data
+
         public init(
             learnSteps: [Float] = [],
             relearnSteps: [Float] = [],
@@ -141,7 +154,10 @@ public struct DeckConfig: Sendable, Hashable, Identifiable {
             easyDaysPercentages: [Float] = [],
             historicalRetention: Float = 0,
             paramSearch: String = "",
-            other: Data = Data()
+            other: Data = Data(),
+            rwkvCurveEnabled: Bool = false,
+            rwkvInstantEnabled: Bool = false,
+            preservedProto: Data = Data()
         ) {
             self.learnSteps = learnSteps
             self.relearnSteps = relearnSteps
@@ -187,6 +203,36 @@ public struct DeckConfig: Sendable, Hashable, Identifiable {
             self.historicalRetention = historicalRetention
             self.paramSearch = paramSearch
             self.other = other
+            self.rwkvCurveEnabled = rwkvCurveEnabled
+            self.rwkvInstantEnabled = rwkvInstantEnabled
+            self.preservedProto = preservedProto
+        }
+    }
+}
+
+/// The scheduler a preset reviews with.
+public enum ReviewScheduler: String, Sendable, Hashable, CaseIterable, Identifiable {
+    /// FSRS intervals and due dates.
+    case fsrs
+    /// RWKV predicts the forgetting curve and sets each interval where
+    /// recall falls to the desired retention.
+    case rwkvCurve
+    /// RWKV picks the reviews with the lowest predicted recall each time;
+    /// RWKV-Curve still writes due dates for other devices.
+    case rwkvInstant
+
+    public var id: String { rawValue }
+}
+
+extension DeckConfig.Config {
+    public var reviewScheduler: ReviewScheduler {
+        get {
+            if rwkvInstantEnabled { return .rwkvInstant }
+            return rwkvCurveEnabled ? .rwkvCurve : .fsrs
+        }
+        set {
+            rwkvCurveEnabled = newValue != .fsrs
+            rwkvInstantEnabled = newValue == .rwkvInstant
         }
     }
 }

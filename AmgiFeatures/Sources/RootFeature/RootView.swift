@@ -37,6 +37,7 @@ public struct RootView: View {
 
     @State private var pendingReviewDeckId: DeckID?
     @State private var showImport = false
+    @State private var openedPackage: URL?
     @State private var refreshID = UUID()
     @State private var wordSheet: WordSpotlightSheet?
     private let wordSpotlight = WordSpotlightController.shared
@@ -62,6 +63,12 @@ public struct RootView: View {
                 guard AmgiRoot.startupError == nil else { return }
                 await wordSpotlight.refresh()
             }
+            // Load RWKV for the open profile (re-runs on a profile switch),
+            // and catch up with reviews synced or made elsewhere.
+            .task(id: accountStore.selectedID) {
+                guard AmgiRoot.startupError == nil else { return }
+                await RwkvEngine.shared.prepare()
+            }
             .onChange(of: wordSpotlight.pendingLink, initial: true) { _, link in
                 guard let link else { return }
                 wordSheet = .word(link)
@@ -72,6 +79,11 @@ public struct RootView: View {
                     Task { await writeWidgetSnapshot() }
                     Task { await wordSpotlight.refreshIfNeeded() }
                 }
+                if newPhase == .background {
+                    Task { await RwkvEngine.shared.checkpoint() }
+                } else if oldPhase == .background, newPhase == .inactive || newPhase == .active {
+                    Task { await RwkvEngine.shared.refresh() }
+                }
                 // A suspended app can resume past the scheduler's day
                 // rollover; due counts and today's stats would otherwise
                 // stay frozen until the next mutation (#64).
@@ -80,6 +92,10 @@ public struct RootView: View {
                 }
             }
             .onOpenURL { url in
+                if url.isFileURL, ["apkg", "colpkg"].contains(url.pathExtension.lowercased()) {
+                    openedPackage = url
+                    return
+                }
                 if let link = WordSpotlightLink(url: url) {
                     wordSheet = .word(link)
                     return
@@ -156,8 +172,14 @@ public struct RootView: View {
             Text(accountStore.switchFailure ?? "")
         }
         // still drives the tabs not yet on CollectionStore
-        .syncFlow { refreshID = UUID() }
-        .deckImport(isPresented: $showImport) {
+        .syncFlow {
+            refreshID = UUID()
+            // A sync can bring reviews from other devices, or a whole new
+            // collection: bring the model state up to date.
+            Task { await RwkvEngine.shared.prepare() }
+        }
+        .overlay(alignment: .top) { RwkvProgressBanner() }
+        .deckImport(isPresented: $showImport, openedFile: $openedPackage) {
             store.invalidateAll()
             refreshID = UUID()
         }

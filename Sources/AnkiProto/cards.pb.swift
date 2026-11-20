@@ -182,6 +182,15 @@ public nonisolated struct Anki_Cards_Card: @unchecked Sendable {
   /// Clears the value of `lastReviewTimeSecs`. Subsequent reads from it will return its default value.
   public mutating func clearLastReviewTimeSecs() {_uniqueStorage()._lastReviewTimeSecs = nil}
 
+  public var rwkvHistoryResetAfter: Int64 {
+    get {_storage._rwkvHistoryResetAfter ?? 0}
+    set {_uniqueStorage()._rwkvHistoryResetAfter = newValue}
+  }
+  /// Returns true if `rwkvHistoryResetAfter` has been explicitly set.
+  public var hasRwkvHistoryResetAfter: Bool {_storage._rwkvHistoryResetAfter != nil}
+  /// Clears the value of `rwkvHistoryResetAfter`. Subsequent reads from it will return its default value.
+  public mutating func clearRwkvHistoryResetAfter() {_uniqueStorage()._rwkvHistoryResetAfter = nil}
+
   public var customData: String {
     get {_storage._customData}
     set {_uniqueStorage()._customData = newValue}
@@ -203,9 +212,30 @@ public nonisolated struct Anki_Cards_FsrsMemoryState: Sendable {
 
   public var difficulty: Float = 0
 
+  public var stabilityInternal: Float {
+    get {_stabilityInternal ?? 0}
+    set {_stabilityInternal = newValue}
+  }
+  /// Returns true if `stabilityInternal` has been explicitly set.
+  public var hasStabilityInternal: Bool {self._stabilityInternal != nil}
+  /// Clears the value of `stabilityInternal`. Subsequent reads from it will return its default value.
+  public mutating func clearStabilityInternal() {self._stabilityInternal = nil}
+
+  public var stabilityFast: Float {
+    get {_stabilityFast ?? 0}
+    set {_stabilityFast = newValue}
+  }
+  /// Returns true if `stabilityFast` has been explicitly set.
+  public var hasStabilityFast: Bool {self._stabilityFast != nil}
+  /// Clears the value of `stabilityFast`. Subsequent reads from it will return its default value.
+  public mutating func clearStabilityFast() {self._stabilityFast = nil}
+
   public var unknownFields = SwiftProtobuf.UnknownStorage()
 
   public init() {}
+
+  fileprivate var _stabilityInternal: Float? = nil
+  fileprivate var _stabilityFast: Float? = nil
 }
 
 public nonisolated struct Anki_Cards_UpdateCardsRequest: Sendable {
@@ -328,7 +358,7 @@ nonisolated extension Anki_Cards_CardIds: SwiftProtobuf.Message, SwiftProtobuf._
 
 nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".Card"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}note_id\0\u{3}deck_id\0\u{3}template_idx\0\u{3}mtime_secs\0\u{1}usn\0\u{1}ctype\0\u{1}queue\0\u{1}due\0\u{1}interval\0\u{3}ease_factor\0\u{1}reps\0\u{1}lapses\0\u{3}remaining_steps\0\u{3}original_due\0\u{3}original_deck_id\0\u{1}flags\0\u{3}original_position\0\u{3}custom_data\0\u{3}memory_state\0\u{3}desired_retention\0\u{1}decay\0\u{3}last_review_time_secs\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}id\0\u{3}note_id\0\u{3}deck_id\0\u{3}template_idx\0\u{3}mtime_secs\0\u{1}usn\0\u{1}ctype\0\u{1}queue\0\u{1}due\0\u{1}interval\0\u{3}ease_factor\0\u{1}reps\0\u{1}lapses\0\u{3}remaining_steps\0\u{3}original_due\0\u{3}original_deck_id\0\u{1}flags\0\u{3}original_position\0\u{3}custom_data\0\u{3}memory_state\0\u{3}desired_retention\0\u{1}decay\0\u{3}last_review_time_secs\0\u{3}rwkv_history_reset_after\0")
 
   fileprivate class _StorageClass {
     var _id: Int64 = 0
@@ -353,6 +383,7 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
     var _desiredRetention: Float? = nil
     var _decay: Float? = nil
     var _lastReviewTimeSecs: Int64? = nil
+    var _rwkvHistoryResetAfter: Int64? = nil
     var _customData: String = String()
 
       // This property is used as the initial default value for new instances of the type.
@@ -386,6 +417,7 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
       _desiredRetention = source._desiredRetention
       _decay = source._decay
       _lastReviewTimeSecs = source._lastReviewTimeSecs
+      _rwkvHistoryResetAfter = source._rwkvHistoryResetAfter
       _customData = source._customData
     }
   }
@@ -428,6 +460,7 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
         case 21: try { try decoder.decodeSingularFloatField(value: &_storage._desiredRetention) }()
         case 22: try { try decoder.decodeSingularFloatField(value: &_storage._decay) }()
         case 23: try { try decoder.decodeSingularInt64Field(value: &_storage._lastReviewTimeSecs) }()
+        case 24: try { try decoder.decodeSingularInt64Field(value: &_storage._rwkvHistoryResetAfter) }()
         default: break
         }
       }
@@ -509,6 +542,9 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
       try { if let v = _storage._lastReviewTimeSecs {
         try visitor.visitSingularInt64Field(value: v, fieldNumber: 23)
       } }()
+      try { if let v = _storage._rwkvHistoryResetAfter {
+        try visitor.visitSingularInt64Field(value: v, fieldNumber: 24)
+      } }()
     }
     try unknownFields.traverse(visitor: &visitor)
   }
@@ -540,6 +576,7 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
         if _storage._desiredRetention != rhs_storage._desiredRetention {return false}
         if _storage._decay != rhs_storage._decay {return false}
         if _storage._lastReviewTimeSecs != rhs_storage._lastReviewTimeSecs {return false}
+        if _storage._rwkvHistoryResetAfter != rhs_storage._rwkvHistoryResetAfter {return false}
         if _storage._customData != rhs_storage._customData {return false}
         return true
       }
@@ -552,7 +589,7 @@ nonisolated extension Anki_Cards_Card: SwiftProtobuf.Message, SwiftProtobuf._Mes
 
 nonisolated extension Anki_Cards_FsrsMemoryState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   public static let protoMessageName: String = _protobuf_package + ".FsrsMemoryState"
-  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}stability\0\u{1}difficulty\0")
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}stability\0\u{1}difficulty\0\u{3}stability_internal\0\u{3}stability_fast\0")
 
   public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
@@ -562,24 +599,38 @@ nonisolated extension Anki_Cards_FsrsMemoryState: SwiftProtobuf.Message, SwiftPr
       switch fieldNumber {
       case 1: try { try decoder.decodeSingularFloatField(value: &self.stability) }()
       case 2: try { try decoder.decodeSingularFloatField(value: &self.difficulty) }()
+      case 3: try { try decoder.decodeSingularFloatField(value: &self._stabilityInternal) }()
+      case 4: try { try decoder.decodeSingularFloatField(value: &self._stabilityFast) }()
       default: break
       }
     }
   }
 
   public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
     if self.stability.bitPattern != 0 {
       try visitor.visitSingularFloatField(value: self.stability, fieldNumber: 1)
     }
     if self.difficulty.bitPattern != 0 {
       try visitor.visitSingularFloatField(value: self.difficulty, fieldNumber: 2)
     }
+    try { if let v = self._stabilityInternal {
+      try visitor.visitSingularFloatField(value: v, fieldNumber: 3)
+    } }()
+    try { if let v = self._stabilityFast {
+      try visitor.visitSingularFloatField(value: v, fieldNumber: 4)
+    } }()
     try unknownFields.traverse(visitor: &visitor)
   }
 
   public static func ==(lhs: Anki_Cards_FsrsMemoryState, rhs: Anki_Cards_FsrsMemoryState) -> Bool {
     if lhs.stability != rhs.stability {return false}
     if lhs.difficulty != rhs.difficulty {return false}
+    if lhs._stabilityInternal != rhs._stabilityInternal {return false}
+    if lhs._stabilityFast != rhs._stabilityFast {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

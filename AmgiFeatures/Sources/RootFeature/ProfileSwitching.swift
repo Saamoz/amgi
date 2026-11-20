@@ -46,6 +46,7 @@ func switchProfile(to account: AmgiAccount) async {
     @Dependency(\.syncCoordinator) var syncCoordinator
 
     await syncCoordinator.cancelAndWait()
+    await RwkvEngine.shared.collectionWillClose()
     do {
         try backend.closeCollection()
     } catch {

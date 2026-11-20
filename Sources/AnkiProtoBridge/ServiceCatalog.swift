@@ -35,6 +35,7 @@ enum AuxMethod {
 }
 
 enum CollectionOpsMethod {
+    static let latestProgress: UInt32 = 4
     static let checkDatabase: UInt32 = 6
     static let getUndoStatus: UInt32 = 7
     static let undo: UInt32 = 8
@@ -64,17 +65,25 @@ enum DecksMethod {
 /// `AnkiBackend.SchedulerMethod` but are kept here so service code
 /// never names the raw `UInt32` constants directly.
 enum SchedulerMethod {
-    static let getQueuedCards: UInt32 = 3
-    static let answerCard: UInt32 = 4
-    static let extendLimits: UInt32 = 9
-    static let buryOrSuspendCards: UInt32 = 14
-    static let emptyFilteredDeck: UInt32 = 15
-    static let rebuildFilteredDeck: UInt32 = 16
-    static let scheduleCardsAsNew: UInt32 = 17
-    static let setDueDate: UInt32 = 19
-    static let computeFsrsParams: UInt32 = 30
-    static let simulateFsrsReview: UInt32 = 33
-    static let simulateFsrsWorkload: UInt32 = 34
+    static let getQueuedCards: UInt32 = 6
+    static let answerCard: UInt32 = 8
+    static let extendLimits: UInt32 = 13
+    static let buryOrSuspendCards: UInt32 = 18
+    static let emptyFilteredDeck: UInt32 = 19
+    static let rebuildFilteredDeck: UInt32 = 20
+    static let scheduleCardsAsNew: UInt32 = 21
+    static let setDueDate: UInt32 = 23
+    static let computeFsrsParams: UInt32 = 35
+    static let simulateFsrsReview: UInt32 = 39
+    static let simulateFsrsWorkload: UInt32 = 40
+    // Native RWKV (the Saamoz/anki fork), appended after upstream's methods.
+    static let rwkvNativeLoad: UInt32 = 76
+    static let rwkvNativeUnload: UInt32 = 77
+    static let rwkvNativeGetStatus: UInt32 = 78
+    static let rwkvNativeSync: UInt32 = 79
+    static let rwkvNativeCheckpoint: UInt32 = 80
+    static let rwkvNativeCardPrediction: UInt32 = 81
+    static let rwkvNativeCalibration: UInt32 = 82
 }
 
 enum DeckConfigMethod {
@@ -160,11 +169,11 @@ enum ImageOcclusionMethod {
 
 /// BackendMediaService (41).
 enum MediaMethod {
-    static let checkMedia: UInt32 = 0
-    static let addMediaFile: UInt32 = 1
-    static let trashMediaFiles: UInt32 = 2
-    static let emptyTrash: UInt32 = 3
-    static let restoreTrash: UInt32 = 4
+    static let checkMedia: UInt32 = 1
+    static let addMediaFile: UInt32 = 2
+    static let trashMediaFiles: UInt32 = 4
+    static let emptyTrash: UInt32 = 5
+    static let restoreTrash: UInt32 = 6
 }
 
 /// BackendCardRenderingService (27). The collection-level service

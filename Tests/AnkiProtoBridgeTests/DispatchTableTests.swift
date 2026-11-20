@@ -49,6 +49,7 @@ struct DispatchTableTests {
 
     private static let methods: [Method] = [
         // backend_collection_service (3)
+        Method(ServiceID.collection, CollectionOpsMethod.latestProgress, "latest_progress"),
         Method(ServiceID.collection, CollectionOpsMethod.checkDatabase, "check_database"),
         Method(ServiceID.collection, CollectionOpsMethod.getUndoStatus, "get_undo_status"),
         Method(ServiceID.collection, CollectionOpsMethod.undo, "undo"),
@@ -81,6 +82,13 @@ struct DispatchTableTests {
         Method(ServiceID.scheduler, SchedulerMethod.computeFsrsParams, "compute_fsrs_params"),
         Method(ServiceID.scheduler, SchedulerMethod.simulateFsrsReview, "simulate_fsrs_review"),
         Method(ServiceID.scheduler, SchedulerMethod.simulateFsrsWorkload, "simulate_fsrs_workload"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeLoad, "rwkv_native_load"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeUnload, "rwkv_native_unload"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeGetStatus, "rwkv_native_get_status"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeSync, "rwkv_native_sync"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCheckpoint, "rwkv_native_checkpoint"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCardPrediction, "rwkv_native_card_prediction"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCalibration, "rwkv_native_calibration"),
         // backend_deck_config_service (11)
         Method(ServiceID.deckConfig, DeckConfigMethod.getDeckConfig, "get_deck_config"),
         Method(ServiceID.deckConfig, DeckConfigMethod.getDeckConfigsForUpdate, "get_deck_configs_for_update"),

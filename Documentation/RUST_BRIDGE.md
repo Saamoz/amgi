@@ -97,6 +97,6 @@ multi-arch simulator build fails to link x86_64.
 files under `anki-upstream/proto/anki/` to produce Swift types in
 `Sources/AnkiProto/`.
 
-`anki-upstream/` is a submodule pinned to the `26.05` tag. Do not move it
+`anki-upstream/` is a submodule tracking `main` of the RWKV fork (Saamoz/anki). Do not move it
 without coordinating: the generated protos and the service/method IDs are tied
 to that revision.

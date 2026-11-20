@@ -109,6 +109,16 @@ package struct SettingsView: View {
             SettingsSectionHeader(title: "Study")
             SettingsGroup {
                 SettingsRowLink(
+                    title: "RWKV Scheduler",
+                    systemImage: "brain.head.profile",
+                    tone: .mature,
+                    detail: RwkvEngine.shared.phase == .ready ? "On" : nil
+                ) {
+                    RwkvSettingsView()
+                }
+                .accessibilityIdentifier("settings.rwkv")
+                SettingsSeparator()
+                SettingsRowLink(
                     title: "Word Spotlight",
                     systemImage: "character.book.closed",
                     tone: .accent
