@@ -1,4 +1,4 @@
 [submodule "anki-upstream"]
 	path = anki-upstream
 	url = https://github.com/Saamoz/anki.git
-	branch = claude/rwkv-native-core
+	branch = main
