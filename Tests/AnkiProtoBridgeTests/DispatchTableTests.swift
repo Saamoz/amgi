@@ -89,6 +89,7 @@ struct DispatchTableTests {
         Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCheckpoint, "rwkv_native_checkpoint"),
         Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCardPrediction, "rwkv_native_card_prediction"),
         Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCalibration, "rwkv_native_calibration"),
+        Method(ServiceID.scheduler, SchedulerMethod.rwkvNativeCardCurve, "rwkv_native_card_curve"),
         // backend_deck_config_service (11)
         Method(ServiceID.deckConfig, DeckConfigMethod.getDeckConfig, "get_deck_config"),
         Method(ServiceID.deckConfig, DeckConfigMethod.getDeckConfigsForUpdate, "get_deck_configs_for_update"),

@@ -84,6 +84,7 @@ enum SchedulerMethod {
     static let rwkvNativeCheckpoint: UInt32 = 80
     static let rwkvNativeCardPrediction: UInt32 = 81
     static let rwkvNativeCalibration: UInt32 = 82
+    static let rwkvNativeCardCurve: UInt32 = 83
 }
 
 enum DeckConfigMethod {

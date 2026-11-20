@@ -35,6 +35,11 @@ anki-upstream: rslib/src/scheduler/rwkv/native.rs    (Saamoz/anki main)
   `rwkv_review_instant_order_enabled` (Instant), mirrored as
   `DeckConfig.Config.reviewScheduler`. These sync with the desktop fork.
 
+- **Inside RWKV** (Settings → RWKV → Explore) shows one card through
+  `RwkvNativeCardCurve`: its forgetting curve now and after each answer,
+  the fading traces the curve blends, its first-layer memory matrices, and
+  the prediction recorded before each past answer. It changes no state.
+
 ## Model files
 
 `RwkvEngine.swift` lists them in `RwkvModelFile`: SM92 (two-head, RWKV-Curve)
