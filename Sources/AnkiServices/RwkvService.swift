@@ -26,6 +26,8 @@ public struct RwkvService: Sendable {
     public var checkpoint: @Sendable () throws -> RwkvStatus
     public var cardPrediction: @Sendable (_ cardId: CardID) throws -> RwkvCardPrediction
     public var calibration: @Sendable (_ buckets: Int) throws -> RwkvCalibration
+    /// A look inside RWKV-Curve for one card; nil picks a reviewed one.
+    public var cardCurve: @Sendable (_ cardId: CardID?, _ shuffle: Bool, _ days: [Float]) throws -> RwkvCardCurve
     /// Puts every preset on `scheduler` and turns FSRS on collection-wide,
     /// which RWKV-Curve's answer states build on. Other settings are kept.
     public var useSchedulerForAllPresets: @Sendable (_ scheduler: ReviewScheduler) throws -> Void
@@ -43,6 +45,9 @@ extension RwkvService: DependencyKey {
             checkpoint: { try backend.invoke(.rwkvCheckpoint) },
             cardPrediction: { cardId in try backend.invoke(.rwkvCardPrediction(cardId: cardId)) },
             calibration: { buckets in try backend.invoke(.rwkvCalibration(buckets: buckets)) },
+            cardCurve: { cardId, shuffle, days in
+                try backend.invoke(.rwkvCardCurve(cardId: cardId, shuffle: shuffle, days: days))
+            },
             useSchedulerForAllPresets: { scheduler in
                 let deckId = try backend.invoke(.getCurrentDeck).id
                 let context = try backend.invoke(.deckConfigsForUpdate(deckId: deckId))

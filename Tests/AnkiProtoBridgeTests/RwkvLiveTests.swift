@@ -132,6 +132,17 @@ import SwiftProtobuf
             let calibration = try backend.invoke(.rwkvCalibration(buckets: 10))
             #expect(calibration.buckets.count == 10)
 
+            // A look inside, for the most recently answered card.
+            let inside = try backend.invoke(.rwkvCardCurve(cardId: nil, shuffle: false, days: [0, 1, 7, 30]))
+            #expect(inside.available && inside.cardId == answered.card.id)
+            #expect(inside.question.hasPrefix("card ") && inside.answer == "back")
+            #expect(inside.now.count == 4 && inside.answers.count == 4)
+            #expect(inside.answers.allSatisfy { $0.count == 4 })
+            #expect(abs(inside.components.map(\.weight).reduce(0, +) - 1) < 0.01)
+            #expect(!inside.memoryHeads.isEmpty)
+            #expect(inside.memoryHeads.allSatisfy { $0.count == inside.memorySide * inside.memorySide })
+            #expect(!inside.reviews.isEmpty)
+
             // A reload restores the checkpoint instead of replaying.
             try backend.invoke(.rwkvUnload)
             #expect(try !backend.invoke(.rwkvStatus).loaded)

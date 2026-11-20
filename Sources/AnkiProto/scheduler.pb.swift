@@ -4224,6 +4224,112 @@ public nonisolated struct Anki_Scheduler_RwkvNativeCalibrationResponse: Sendable
   public init() {}
 }
 
+public nonisolated struct Anki_Scheduler_RwkvNativeCardCurveRequest: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// 0 picks a reviewed card in a preset that uses RWKV: the most recently
+  /// reviewed one, or with `shuffle` a random one.
+  public var cardID: Int64 = 0
+
+  /// Days from now to sample the curves at.
+  public var days: [Float] = []
+
+  public var shuffle: Bool = false
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public init() {}
+}
+
+public nonisolated struct Anki_Scheduler_RwkvNativeCardCurveResponse: Sendable {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  public var available: Bool = false
+
+  public var days: [Float] = []
+
+  /// Recall at `days` from now, and after answering Again..Easy now.
+  public var now: [Float] = []
+
+  public var again: [Float] = []
+
+  public var hard: [Float] = []
+
+  public var good: [Float] = []
+
+  public var easy: [Float] = []
+
+  public var components: [Anki_Scheduler_RwkvNativeCardCurveResponse.Component] = []
+
+  /// The card's first-layer memory matrices, one per head, each
+  /// memory_side × memory_side and row-major.
+  public var memory: [Float] = []
+
+  public var memorySide: UInt32 = 0
+
+  public var targetRetention: Float = 0
+
+  public var reviews: [Anki_Scheduler_RwkvNativeCardCurveResponse.Review] = []
+
+  public var cardID: Int64 = 0
+
+  /// The card's question and answer as plain text.
+  public var question: String = String()
+
+  public var answer: String = String()
+
+  public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  public nonisolated struct Component: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Days until this component falls to 90% recall.
+    public var s90Days: Float = 0
+
+    public var weight: Float = 0
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+  }
+
+  public nonisolated struct Review: Sendable {
+    // SwiftProtobuf.Message conformance is added in an extension below. See the
+    // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+    // methods supported on all messages.
+
+    /// Milliseconds since the epoch (the revlog id).
+    public var timeMs: Int64 = 0
+
+    /// 1 to 4: Again, Hard, Good, Easy.
+    public var ease: UInt32 = 0
+
+    /// RWKV's recall prediction just before the answer, when recorded.
+    public var predicted: Float {
+      get {_predicted ?? 0}
+      set {_predicted = newValue}
+    }
+    /// Returns true if `predicted` has been explicitly set.
+    public var hasPredicted: Bool {self._predicted != nil}
+    /// Clears the value of `predicted`. Subsequent reads from it will return its default value.
+    public mutating func clearPredicted() {self._predicted = nil}
+
+    public var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    public init() {}
+
+    fileprivate var _predicted: Float? = nil
+  }
+
+  public init() {}
+}
+
 // MARK: - Code below here is support for the SwiftProtobuf runtime.
 
 fileprivate nonisolated let _protobuf_package = "anki.scheduler"
@@ -11493,6 +11599,225 @@ nonisolated extension Anki_Scheduler_RwkvNativeCalibrationResponse.Bucket: Swift
     if lhs.meanPredicted != rhs.meanPredicted {return false}
     if lhs.observed != rhs.observed {return false}
     if lhs.count != rhs.count {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension Anki_Scheduler_RwkvNativeCardCurveRequest: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".RwkvNativeCardCurveRequest"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}card_id\0\u{1}days\0\u{1}shuffle\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.cardID) }()
+      case 2: try { try decoder.decodeRepeatedFloatField(value: &self.days) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.shuffle) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.cardID != 0 {
+      try visitor.visitSingularInt64Field(value: self.cardID, fieldNumber: 1)
+    }
+    if !self.days.isEmpty {
+      try visitor.visitPackedFloatField(value: self.days, fieldNumber: 2)
+    }
+    if self.shuffle != false {
+      try visitor.visitSingularBoolField(value: self.shuffle, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Anki_Scheduler_RwkvNativeCardCurveRequest, rhs: Anki_Scheduler_RwkvNativeCardCurveRequest) -> Bool {
+    if lhs.cardID != rhs.cardID {return false}
+    if lhs.days != rhs.days {return false}
+    if lhs.shuffle != rhs.shuffle {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension Anki_Scheduler_RwkvNativeCardCurveResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = _protobuf_package + ".RwkvNativeCardCurveResponse"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{1}available\0\u{1}days\0\u{1}now\0\u{1}again\0\u{1}hard\0\u{1}good\0\u{1}easy\0\u{1}components\0\u{1}memory\0\u{3}memory_side\0\u{3}target_retention\0\u{1}reviews\0\u{3}card_id\0\u{1}question\0\u{1}answer\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularBoolField(value: &self.available) }()
+      case 2: try { try decoder.decodeRepeatedFloatField(value: &self.days) }()
+      case 3: try { try decoder.decodeRepeatedFloatField(value: &self.now) }()
+      case 4: try { try decoder.decodeRepeatedFloatField(value: &self.again) }()
+      case 5: try { try decoder.decodeRepeatedFloatField(value: &self.hard) }()
+      case 6: try { try decoder.decodeRepeatedFloatField(value: &self.good) }()
+      case 7: try { try decoder.decodeRepeatedFloatField(value: &self.easy) }()
+      case 8: try { try decoder.decodeRepeatedMessageField(value: &self.components) }()
+      case 9: try { try decoder.decodeRepeatedFloatField(value: &self.memory) }()
+      case 10: try { try decoder.decodeSingularUInt32Field(value: &self.memorySide) }()
+      case 11: try { try decoder.decodeSingularFloatField(value: &self.targetRetention) }()
+      case 12: try { try decoder.decodeRepeatedMessageField(value: &self.reviews) }()
+      case 13: try { try decoder.decodeSingularInt64Field(value: &self.cardID) }()
+      case 14: try { try decoder.decodeSingularStringField(value: &self.question) }()
+      case 15: try { try decoder.decodeSingularStringField(value: &self.answer) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.available != false {
+      try visitor.visitSingularBoolField(value: self.available, fieldNumber: 1)
+    }
+    if !self.days.isEmpty {
+      try visitor.visitPackedFloatField(value: self.days, fieldNumber: 2)
+    }
+    if !self.now.isEmpty {
+      try visitor.visitPackedFloatField(value: self.now, fieldNumber: 3)
+    }
+    if !self.again.isEmpty {
+      try visitor.visitPackedFloatField(value: self.again, fieldNumber: 4)
+    }
+    if !self.hard.isEmpty {
+      try visitor.visitPackedFloatField(value: self.hard, fieldNumber: 5)
+    }
+    if !self.good.isEmpty {
+      try visitor.visitPackedFloatField(value: self.good, fieldNumber: 6)
+    }
+    if !self.easy.isEmpty {
+      try visitor.visitPackedFloatField(value: self.easy, fieldNumber: 7)
+    }
+    if !self.components.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.components, fieldNumber: 8)
+    }
+    if !self.memory.isEmpty {
+      try visitor.visitPackedFloatField(value: self.memory, fieldNumber: 9)
+    }
+    if self.memorySide != 0 {
+      try visitor.visitSingularUInt32Field(value: self.memorySide, fieldNumber: 10)
+    }
+    if self.targetRetention.bitPattern != 0 {
+      try visitor.visitSingularFloatField(value: self.targetRetention, fieldNumber: 11)
+    }
+    if !self.reviews.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.reviews, fieldNumber: 12)
+    }
+    if self.cardID != 0 {
+      try visitor.visitSingularInt64Field(value: self.cardID, fieldNumber: 13)
+    }
+    if !self.question.isEmpty {
+      try visitor.visitSingularStringField(value: self.question, fieldNumber: 14)
+    }
+    if !self.answer.isEmpty {
+      try visitor.visitSingularStringField(value: self.answer, fieldNumber: 15)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Anki_Scheduler_RwkvNativeCardCurveResponse, rhs: Anki_Scheduler_RwkvNativeCardCurveResponse) -> Bool {
+    if lhs.available != rhs.available {return false}
+    if lhs.days != rhs.days {return false}
+    if lhs.now != rhs.now {return false}
+    if lhs.again != rhs.again {return false}
+    if lhs.hard != rhs.hard {return false}
+    if lhs.good != rhs.good {return false}
+    if lhs.easy != rhs.easy {return false}
+    if lhs.components != rhs.components {return false}
+    if lhs.memory != rhs.memory {return false}
+    if lhs.memorySide != rhs.memorySide {return false}
+    if lhs.targetRetention != rhs.targetRetention {return false}
+    if lhs.reviews != rhs.reviews {return false}
+    if lhs.cardID != rhs.cardID {return false}
+    if lhs.question != rhs.question {return false}
+    if lhs.answer != rhs.answer {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension Anki_Scheduler_RwkvNativeCardCurveResponse.Component: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Anki_Scheduler_RwkvNativeCardCurveResponse.protoMessageName + ".Component"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}s90_days\0\u{1}weight\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularFloatField(value: &self.s90Days) }()
+      case 2: try { try decoder.decodeSingularFloatField(value: &self.weight) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.s90Days.bitPattern != 0 {
+      try visitor.visitSingularFloatField(value: self.s90Days, fieldNumber: 1)
+    }
+    if self.weight.bitPattern != 0 {
+      try visitor.visitSingularFloatField(value: self.weight, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Anki_Scheduler_RwkvNativeCardCurveResponse.Component, rhs: Anki_Scheduler_RwkvNativeCardCurveResponse.Component) -> Bool {
+    if lhs.s90Days != rhs.s90Days {return false}
+    if lhs.weight != rhs.weight {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+nonisolated extension Anki_Scheduler_RwkvNativeCardCurveResponse.Review: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  public static let protoMessageName: String = Anki_Scheduler_RwkvNativeCardCurveResponse.protoMessageName + ".Review"
+  public static let _protobuf_nameMap = SwiftProtobuf._NameMap(bytecode: "\0\u{3}time_ms\0\u{1}ease\0\u{1}predicted\0")
+
+  public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
+      switch fieldNumber {
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.timeMs) }()
+      case 2: try { try decoder.decodeSingularUInt32Field(value: &self.ease) }()
+      case 3: try { try decoder.decodeSingularFloatField(value: &self._predicted) }()
+      default: break
+      }
+    }
+  }
+
+  public func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    // The use of inline closures is to circumvent an issue where the compiler
+    // allocates stack space for every if/case branch local when no optimizations
+    // are enabled. https://github.com/apple/swift-protobuf/issues/1034 and
+    // https://github.com/apple/swift-protobuf/issues/1182
+    if self.timeMs != 0 {
+      try visitor.visitSingularInt64Field(value: self.timeMs, fieldNumber: 1)
+    }
+    if self.ease != 0 {
+      try visitor.visitSingularUInt32Field(value: self.ease, fieldNumber: 2)
+    }
+    try { if let v = self._predicted {
+      try visitor.visitSingularFloatField(value: v, fieldNumber: 3)
+    } }()
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  public static func ==(lhs: Anki_Scheduler_RwkvNativeCardCurveResponse.Review, rhs: Anki_Scheduler_RwkvNativeCardCurveResponse.Review) -> Bool {
+    if lhs.timeMs != rhs.timeMs {return false}
+    if lhs.ease != rhs.ease {return false}
+    if lhs._predicted != rhs._predicted {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

@@ -176,3 +176,46 @@ extension Request where Response == RwkvCalibration {
         )
     }
 }
+
+extension Request where Response == RwkvCardCurve {
+    /// A look inside RWKV-Curve for `cardId`, or without one for the most
+    /// recently reviewed RWKV card (a random one with `shuffle`).
+    public static func rwkvCardCurve(cardId: CardID?, shuffle: Bool, days: [Float]) -> Self {
+        Self(
+            serviceId: ServiceID.scheduler,
+            methodId: SchedulerMethod.rwkvNativeCardCurve,
+            encode: {
+                var proto = Anki_Scheduler_RwkvNativeCardCurveRequest()
+                proto.cardID = cardId?.rawValue ?? 0
+                proto.shuffle = shuffle
+                proto.days = days
+                return try proto.serializedData()
+            },
+            decode: { bytes in
+                let proto = try Anki_Scheduler_RwkvNativeCardCurveResponse(serializedBytes: bytes)
+                return RwkvCardCurve(
+                    available: proto.available,
+                    cardId: CardID(proto.cardID),
+                    question: proto.question,
+                    answer: proto.answer,
+                    days: proto.days,
+                    now: proto.now,
+                    answers: [proto.again, proto.hard, proto.good, proto.easy],
+                    components: proto.components.map {
+                        RwkvCardCurve.Component(s90Days: $0.s90Days, weight: $0.weight)
+                    },
+                    memory: proto.memory,
+                    memorySide: Int(proto.memorySide),
+                    targetRetention: proto.targetRetention,
+                    reviews: proto.reviews.map {
+                        RwkvCardCurve.Review(
+                            date: Date(timeIntervalSince1970: TimeInterval($0.timeMs) / 1000),
+                            ease: Int($0.ease),
+                            predicted: $0.hasPredicted ? $0.predicted : nil
+                        )
+                    }
+                )
+            }
+        )
+    }
+}

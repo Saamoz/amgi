@@ -28,17 +28,27 @@ struct RwkvSettingsView: View {
             if engine.hasCurveModel {
                 schedulerSection
             }
-            if engine.status.ready, let calibration, calibration.total > 0 {
+            if engine.status.loaded && engine.status.hasCurve {
+                exploreSection
+            }
+            // Kept through a reload, so the page doesn't jump while RWKV
+            // relearns after a scheduler change.
+            if let calibration, calibration.total > 0 {
                 calibrationSection(calibration)
             }
             if engine.hasCurveModel {
                 advancedSection
             }
         }
+        .animation(AmgiMotion.standard, value: engine.phase)
+        .animation(AmgiMotion.standard, value: engine.showsProgress)
+        .animation(AmgiMotion.standard, value: calibration)
         .navigationTitle("RWKV")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: engine.status.reviewCount) {
-            calibration = await engine.calibration()
+            if let latest = await engine.calibration() {
+                calibration = latest
+            }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data]) { result in
             if case .success(let url) = result {
@@ -68,9 +78,12 @@ struct RwkvSettingsView: View {
                     systemImage: "brain.head.profile",
                     tone: .mature
                 )
-                if engine.showsProgress || engine.phase == .syncing || engine.phase == .loading {
+                // Short loads and replays finish within a moment; a row that
+                // appears and vanishes for them only makes the page jump.
+                if engine.showsProgress {
                     SettingsSeparator()
                     progressRow
+                        .transition(.opacity)
                 }
                 if !engine.hasCurveModel {
                     SettingsSeparator()
@@ -148,44 +161,77 @@ struct RwkvSettingsView: View {
         Group {
             SettingsSectionHeader(title: "Schedule With")
             SettingsGroup {
-                SettingsButtonRow(
-                    title: "RWKV-Curve for all presets",
+                SchedulerChoiceRow(
+                    title: "RWKV-Curve",
+                    subtitle: "Due dates from each card's forgetting curve",
                     systemImage: "chart.line.downtrend.xyaxis",
                     tone: .review,
+                    isSelected: shownScheduler == .rwkvCurve,
                     isBusy: applying == .rwkvCurve
-                ) {
-                    Task { await apply(.rwkvCurve) }
-                }
+                ) { choose(.rwkvCurve) }
                 SettingsSeparator()
-                SettingsButtonRow(
-                    title: "RWKV-Instant for all presets",
+                SchedulerChoiceRow(
+                    title: "RWKV-Instant",
+                    subtitle: "Shows what you're closest to forgetting now",
                     systemImage: "bolt",
                     tone: .learning,
+                    isSelected: shownScheduler == .rwkvInstant,
                     isBusy: applying == .rwkvInstant
-                ) {
-                    Task { await apply(.rwkvInstant) }
-                }
+                ) { choose(.rwkvInstant) }
                 SettingsSeparator()
-                SettingsButtonRow(
-                    title: "FSRS for all presets",
+                SchedulerChoiceRow(
+                    title: "FSRS",
+                    subtitle: "Anki's standard scheduler",
                     systemImage: "function",
                     tone: .neutral,
+                    isSelected: shownScheduler == .fsrs,
                     isBusy: applying == .fsrs
-                ) {
-                    Task { await apply(.fsrs) }
-                }
-                SettingsSeparator()
-                SettingsValueRow(
-                    title: "Presets using RWKV",
-                    // Instant presets also use RWKV-Curve for due dates.
-                    value: "\(max(engine.status.curvePresets, engine.status.instantPresets))",
-                    systemImage: "slider.horizontal.3",
-                    tone: .info
-                )
+                ) { choose(.fsrs) }
             }
             SettingsFootnote(
-                "RWKV-Curve predicts each card's forgetting curve and sets the next review where recall falls to your desired retention. RWKV-Instant instead shows the cards you are most likely to forget right now. Each deck's preset can also be changed in its options. Settings sync to your other devices."
+                shownScheduler == nil
+                    ? "Your presets use different schedulers. Choosing one here puts every preset on it; each deck's preset can also be changed in its options. Settings sync to your other devices."
+                    : "Applies to every preset. RWKV-Curve sets the next review where recall falls to your desired retention; RWKV-Instant shows the cards you are most likely to forget right now. Each deck's preset can also be changed in its options. Settings sync to your other devices."
             )
+        }
+    }
+
+    /// The scheduler every preset uses, as far as the counts tell; nil when
+    /// presets differ. While applying, the choice just made.
+    private var shownScheduler: ReviewScheduler? {
+        if let applying { return applying }
+        let status = engine.status
+        if status.instantPresets > 0 {
+            // Instant presets count as curve presets too (due dates).
+            return status.instantPresets == status.curvePresets ? .rwkvInstant : nil
+        }
+        return status.curvePresets > 0 ? .rwkvCurve : .fsrs
+    }
+
+    private func choose(_ scheduler: ReviewScheduler) {
+        guard applying == nil, scheduler != shownScheduler else { return }
+        withAnimation(AmgiMotion.quick) { applying = scheduler }
+        Task {
+            await engine.useForAllPresets(scheduler)
+            withAnimation(AmgiMotion.standard) { applying = nil }
+        }
+    }
+
+    // MARK: - Explore
+
+    private var exploreSection: some View {
+        Group {
+            SettingsSectionHeader(title: "Explore")
+            SettingsGroup {
+                SettingsRowLink(
+                    title: "Inside RWKV",
+                    systemImage: "waveform.path.ecg",
+                    tone: .mature
+                ) {
+                    RwkvInsideView()
+                }
+            }
+            SettingsFootnote("See how RWKV pictures your memory of a card: its forgetting curve, what it's made of, and the numbers RWKV keeps for it.")
         }
     }
 
@@ -231,12 +277,6 @@ struct RwkvSettingsView: View {
         }
     }
 
-    private func apply(_ scheduler: ReviewScheduler) async {
-        applying = scheduler
-        await engine.useForAllPresets(scheduler)
-        applying = nil
-    }
-
     private func metric(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value)
@@ -275,5 +315,57 @@ struct RwkvSettingsView: View {
                 "Full precision keeps RWKV's memory of each card and note exactly, at about 3.5 KB each. Compact uses roughly a third of the space with very slightly less accurate predictions. Changing it rebuilds the model state."
             )
         }
+    }
+}
+
+/// One scheduler choice: icon, name, one-line description, and a trailing
+/// checkmark (or spinner while it applies) in a fixed-width slot, so
+/// selecting animates the mark without moving anything else.
+private struct SchedulerChoiceRow: View {
+    @Environment(\.palette) private var palette
+
+    let title: String
+    let subtitle: String
+    let systemImage: String
+    let tone: SettingsTone
+    let isSelected: Bool
+    let isBusy: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: AmgiSpacing.md) {
+                SettingsIconTile(systemImage: systemImage, tone: tone)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .amgiFont(.body)
+                        .foregroundStyle(palette.textPrimary)
+                    Text(subtitle)
+                        .amgiFont(.caption)
+                        .foregroundStyle(palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: AmgiSpacing.sm)
+                ZStack {
+                    if isBusy {
+                        ProgressView()
+                            .transition(.opacity)
+                    } else if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(palette.accent)
+                            .transition(.scale(scale: 0.4).combined(with: .opacity))
+                    }
+                }
+                .frame(width: 24, height: 24)
+            }
+            .padding(.horizontal, AmgiSpacing.lg)
+            .padding(.vertical, AmgiSpacing.md)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.pressScale)
+        .sensoryFeedback(.selection, trigger: isSelected) { _, selected in selected }
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

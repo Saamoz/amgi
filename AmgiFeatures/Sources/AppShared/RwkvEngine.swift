@@ -312,6 +312,26 @@ public final class RwkvEngine {
         }
     }
 
+    /// RWKV-Curve's view of one card, sampled over two years: `cardId`, or
+    /// the most recently reviewed RWKV card (a random one with `shuffle`).
+    public func cardCurve(_ cardId: CardID? = nil, shuffle: Bool = false) async -> RwkvCardCurve? {
+        guard loadedConfig != nil, status.hasCurve else { return nil }
+        let service = self.service
+        let days = Self.curveDays
+        return try? await backendOffload { try service.cardCurve(cardId, shuffle, days) }
+    }
+
+    /// Finely spaced near today, where curves bend most, then coarser.
+    private static let curveDays: [Float] = {
+        var days: [Float] = []
+        var day: Float = 0
+        while day <= 730 {
+            days.append(day)
+            day += day < 7 ? 0.25 : day < 30 ? 0.5 : day < 120 ? 1 : 5
+        }
+        return days
+    }()
+
     public func calibration() async -> RwkvCalibration? {
         guard loadedConfig != nil else { return nil }
         let service = self.service

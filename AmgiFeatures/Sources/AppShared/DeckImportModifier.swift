@@ -17,9 +17,20 @@ private struct DeckImportModifier: ViewModifier {
     @State private var status: ImportStatusBanner.Status?
     @State private var failure: String?
 
+    /// Anki packages by their declared types (Info.plist), plus ZIP and
+    /// plain data for files another app saved under a generic type.
+    private static let packageTypes: [UTType] = [
+        UTType("net.ankiweb.apkg"),
+        UTType("net.ankiweb.colpkg"),
+        UTType(filenameExtension: "apkg"),
+        UTType(filenameExtension: "colpkg"),
+        UTType.zip,
+        UTType.data,
+    ].compactMap { $0 }
+
     func body(content: Content) -> some View {
         content
-            .fileImporter(isPresented: $isPresented, allowedContentTypes: [.data]) { result in
+            .fileImporter(isPresented: $isPresented, allowedContentTypes: Self.packageTypes) { result in
                 handleImport(result)
             }
             .onChange(of: openedFile, initial: true) { _, url in

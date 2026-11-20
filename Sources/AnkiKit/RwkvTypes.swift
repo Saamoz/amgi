@@ -196,3 +196,86 @@ public struct RwkvCalibration: Sendable, Hashable {
         self.meanObserved = meanObserved
     }
 }
+
+/// RWKV-Curve's view of one card, for the "Inside RWKV" screen.
+public struct RwkvCardCurve: Sendable, Hashable {
+    /// One of the simple curves the forgetting curve blends.
+    public struct Component: Sendable, Hashable {
+        /// Days until this part of the memory falls to 90% recall.
+        public var s90Days: Float
+        public var weight: Float
+
+        public init(s90Days: Float, weight: Float) {
+            self.s90Days = s90Days
+            self.weight = weight
+        }
+    }
+
+    public struct Review: Sendable, Hashable {
+        public var date: Date
+        /// 1 to 4: Again, Hard, Good, Easy.
+        public var ease: Int
+        /// RWKV's recall prediction just before the answer.
+        public var predicted: Float?
+
+        public init(date: Date, ease: Int, predicted: Float?) {
+            self.date = date
+            self.ease = ease
+            self.predicted = predicted
+        }
+    }
+
+    public var available: Bool
+    public var cardId: CardID
+    public var question: String
+    public var answer: String
+    /// Days from now that the curves are sampled at.
+    public var days: [Float]
+    /// Recall at `days` if the card is not reviewed.
+    public var now: [Float]
+    /// Recall at `days` after answering Again, Hard, Good or Easy now.
+    public var answers: [[Float]]
+    public var components: [Component]
+    /// One `memorySide` × `memorySide` matrix per head, row-major.
+    public var memory: [Float]
+    public var memorySide: Int
+    public var targetRetention: Float
+    public var reviews: [Review]
+
+    public init(
+        available: Bool = false,
+        cardId: CardID = CardID(0),
+        question: String = "",
+        answer: String = "",
+        days: [Float] = [],
+        now: [Float] = [],
+        answers: [[Float]] = [],
+        components: [Component] = [],
+        memory: [Float] = [],
+        memorySide: Int = 0,
+        targetRetention: Float = 0.9,
+        reviews: [Review] = []
+    ) {
+        self.available = available
+        self.cardId = cardId
+        self.question = question
+        self.answer = answer
+        self.days = days
+        self.now = now
+        self.answers = answers
+        self.components = components
+        self.memory = memory
+        self.memorySide = memorySide
+        self.targetRetention = targetRetention
+        self.reviews = reviews
+    }
+
+    /// The memory matrices, one per head.
+    public var memoryHeads: [[Float]] {
+        let size = memorySide * memorySide
+        guard size > 0 else { return [] }
+        return stride(from: 0, to: memory.count - size + 1, by: size).map {
+            Array(memory[$0 ..< $0 + size])
+        }
+    }
+}
