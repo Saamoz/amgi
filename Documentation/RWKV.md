@@ -83,10 +83,14 @@ cannot find files through symlinks there; everything else, including
 
 ## Releasing
 
-CI (`.github/workflows/build-ipa.yml`) builds the unsigned IPA on every manual
-run. To publish a GitHub Release, either push a `v*` tag, or start the
-workflow manually with `release_tag` set and add
-`.github/release-notes/<tag>.md` first.
+Every push to `main` builds the unsigned IPA and publishes it as the next
+GitHub Release, `v1.0.0-rwkv.N` (one past the highest so far). The notes come
+from `.github/release-notes/<tag>.md` when it exists, otherwise from the
+commit subjects since the previous release, so add that file in the change
+for a hand-written summary. The owner installs from Releases: **merge every
+finished change to `main`** (anki-upstream changes first into Saamoz/anki
+`main`, then the submodule bump here). Manual runs build only, unless given
+`release_tag`; pushing a `v*` tag also releases.
 
 ## Not on the phone
 

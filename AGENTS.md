@@ -32,6 +32,11 @@ package layout), `RUST_BRIDGE.md` (the C seam and its build pipeline),
 `CODE_STYLE.md`, `FEATURES.md` and `RWKV.md` (on-device RWKV scheduling: how
 it works, updating the model, verifying without a Mac, releasing).
 
+**Ship every change as a release.** The owner installs builds from GitHub
+Releases, and every push to `main` publishes one (see `RWKV.md`,
+"Releasing"). Finish each change by merging it to `main`: an anki-upstream
+change into Saamoz/anki `main` first, then the submodule bump here.
+
 ## The layer rule
 
 ```

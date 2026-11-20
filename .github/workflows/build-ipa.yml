@@ -11,6 +11,9 @@ on:
         required: false
         default: ''
   push:
+    # Every change merged to main is published as the next release.
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -223,7 +226,9 @@ jobs:
           retention-days: 7
 
   release:
-    if: github.ref_type == 'tag' || inputs.release_tag != ''
+    if: >-
+      github.ref_type == 'tag' || inputs.release_tag != '' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -236,7 +241,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Choose release tag
+        id: tag
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then
+            tag="$GITHUB_REF_NAME"
+          elif [ -n "$INPUT_TAG" ]; then
+            tag="$INPUT_TAG"
+          else
+            # A push to main: one past the highest v1.0.0-rwkv.N so far.
+            git fetch --force --tags origin
+            last=$(git tag -l 'v1.0.0-rwkv.*' | sed 's/^v1.0.0-rwkv.//' | grep -E '^[0-9]+$' | sort -n | tail -1)
+            tag="v1.0.0-rwkv.$(( ${last:-0} + 1 ))"
+          fi
+          echo "Release tag: $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Download unsigned IPA
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
@@ -251,13 +275,21 @@ jobs:
 
       - name: Compose release notes
         env:
-          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+          RELEASE_TAG: ${{ steps.tag.outputs.tag }}
         run: |
           if [ "${GITHUB_REF_TYPE}" = tag ]; then
             git fetch --force origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
             git tag -l --format='%(contents)' "$GITHUB_REF_NAME" > release-notes.md
-          else
+          elif [ -f ".github/release-notes/${RELEASE_TAG}.md" ]; then
             cp ".github/release-notes/${RELEASE_TAG}.md" release-notes.md
+          else
+            # No hand-written notes: the commits since the previous release.
+            previous=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+            {
+              echo "## Changes"
+              echo ""
+              git log --no-merges --format='- %s' ${previous:+"$previous"..}HEAD | head -40
+            } > release-notes.md
           fi
           IPA_SHA256=$(sha256sum dist/AmgiApp-unsigned.ipa | awk '{print $1}')
           cat >> release-notes.md <<NOTES
@@ -295,10 +327,10 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3
         with:
-          name: ${{ inputs.release_tag || github.ref_name }}
-          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ steps.tag.outputs.tag }}
           target_commitish: ${{ github.sha }}
           draft: false
-          prerelease: ${{ contains(inputs.release_tag || github.ref_name, '-rc') || contains(inputs.release_tag || github.ref_name, '-beta') || contains(inputs.release_tag || github.ref_name, '-alpha') }}
+          prerelease: ${{ contains(steps.tag.outputs.tag, '-rc') || contains(steps.tag.outputs.tag, '-beta') || contains(steps.tag.outputs.tag, '-alpha') }}
           files: dist/AmgiApp-unsigned.ipa
           body_path: release-notes.md
